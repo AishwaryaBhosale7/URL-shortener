@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div id="container">
+        <div id="upperDiv">
+            <h1>URL Shortener</h1>
+            <form id="shorten-form">
+                <div id="url">
+                    <label for="inputUrl">Enter URL: </label>
+                    <input type="url" name="inputUrl" id="inputUrl" required>
+                </div>
+                <div id="optUrl">
+                    <label for="optinalUrl">Custom Short URL (Optional)</label>
+                    <input type="text" name="optinalUrl" id="optinalUrl">
+                </div>
+                <button type="submit" id="submit">Shorten</button>
+            </form>
+        </div>
+        <div id="shortedUrl">
+            <h2>Shortened URLs</h2>
+            <ul id="shortUrl">
+            </ul>
+        </div>
+    </div>
+
+<script>
+    const fetchShortenedURL=async()=>{
+        const response = await fetch("/links");
+        const links = await response.json();
+        const lists= document.getElementById("shortUrl");
+        lists.innerHTML="";
+        const sortedLinks = Object.entries(links).reverse();
+        for (const [shortCode, url] of sortedLinks) {
+            const li = document.createElement("li");
+            li.innerHTML=`<a href="/${shortCode}" target="_blank">${window.location.origin}/${shortCode}</a> -- ${url}`;
+            lists.appendChild(li);
+        }
+    }
+
+    document.getElementById("shorten-form").addEventListener("submit",async(event)=>{
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const url = formData.get("inputUrl"); 
+        const optionalUrl = formData.get("optinalUrl"); 
+
+        try {
+           const response = await fetch("/shorten",{
+                method:"POST",
+                headers:{"Content-Type":"application/json"},
+                body:JSON.stringify({url,optionalUrl})
+            })
+
+            if(response.ok){
+                alert("URL shortened successfully");
+                fetchShortenedURL();
+                event.target.reset();
+            }else{
+                const errorMessage=await response.text();
+                alert(errorMessage);
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    });
+    fetchShortenedURL();
+</script>
+
+</body>
+</html>
